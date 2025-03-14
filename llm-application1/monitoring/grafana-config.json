@@ -1,0 +1,17 @@
+{
+  "dashboard": {
+    "title": "LLM Application Monitoring",
+    "panels": [
+      {
+        "title": "Request Latency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "Requests"
+          }
+        ]
+      }
+    ]
+  }
+}
