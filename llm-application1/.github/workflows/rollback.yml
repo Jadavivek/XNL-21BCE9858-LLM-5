@@ -1,0 +1,17 @@
+name: Rollback Pipeline
+
+on:
+  workflow_run:
+    workflows: ["CI/CD Pipeline"]
+    types:
+      - completed
+
+jobs:
+  rollback:
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Execute Rollback
+        run: bash scripts/rollback.sh
