@@ -13,7 +13,7 @@ HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Simple LLM Application</title>
+    <title>Enhanced LLM Application</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -32,13 +32,21 @@ HTML_TEMPLATE = '''
             margin-bottom: 10px;
             padding: 10px;
         }
+        select, button {
+            padding: 10px;
+            margin-bottom: 10px;
+        }
         button {
             background-color: #4CAF50;
             color: white;
-            padding: 10px 15px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            margin-left: 10px;
+        }
+        .controls {
+            display: flex;
+            align-items: center;
         }
         .response {
             margin-top: 20px;
@@ -47,14 +55,26 @@ HTML_TEMPLATE = '''
             border-radius: 5px;
             white-space: pre-wrap;
         }
+        .loading {
+            display: none;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Simple LLM Application</h1>
+        <h1>Enhanced LLM Application</h1>
         <form id="promptForm">
             <textarea id="prompt" placeholder="Enter your prompt here..."></textarea>
-            <button type="submit">Submit</button>
+            <div class="controls">
+                <select id="model">
+                    <option value="google/flan-t5-small">Flan-T5 Small (Fast)</option>
+                    <option value="google/flan-t5-base">Flan-T5 Base (Better)</option>
+                    <option value="facebook/bart-large-cnn">BART Large CNN (Summarization)</option>
+                </select>
+                <button type="submit">Submit</button>
+                <span id="loading" class="loading">Processing...</span>
+            </div>
         </form>
         <div class="response" id="response"></div>
     </div>
@@ -64,9 +84,12 @@ HTML_TEMPLATE = '''
             e.preventDefault();
             
             const prompt = document.getElementById('prompt').value;
+            const model = document.getElementById('model').value;
             const responseElement = document.getElementById('response');
+            const loadingElement = document.getElementById('loading');
             
-            responseElement.textContent = "Loading...";
+            responseElement.textContent = "";
+            loadingElement.style.display = "inline";
             
             try {
                 const response = await fetch('/api/generate', {
@@ -74,13 +97,22 @@ HTML_TEMPLATE = '''
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ prompt: prompt })
+                    body: JSON.stringify({ 
+                        prompt: prompt,
+                        model: model
+                    })
                 });
                 
                 const data = await response.json();
-                responseElement.textContent = data.response;
+                if (data.error) {
+                    responseElement.textContent = "Error: " + data.error;
+                } else {
+                    responseElement.textContent = data.response;
+                }
             } catch (error) {
                 responseElement.textContent = "Error: " + error.message;
+            } finally {
+                loadingElement.style.display = "none";
             }
         });
     </script>
@@ -96,9 +128,10 @@ def home():
 def generate():
     data = request.json
     prompt = data.get('prompt', '')
+    model = data.get('model', 'google/flan-t5-small')
     
     # Use the Hugging Face Inference API (free tier)
-    API_URL = "https://api-inference.huggingface.co/models/google/flan-t5-small"
+    API_URL = f"https://api-inference.huggingface.co/models/{model}"
     headers = {"Authorization": f"Bearer {os.getenv('HUGGINGFACE_API_KEY')}"}
     
     try:
@@ -107,7 +140,13 @@ def generate():
         
         # Extract the generated text from the response
         result = response.json()
-        generated_text = result[0]['generated_text'] if isinstance(result, list) else "No response generated"
+        
+        if model.startswith("facebook/bart"):
+            # BART models return a different format
+            generated_text = result[0]['summary_text'] if isinstance(result, list) else "No response generated"
+        else:
+            # T5 models
+            generated_text = result[0]['generated_text'] if isinstance(result, list) else "No response generated"
         
         return jsonify({"response": generated_text})
     except requests.exceptions.RequestException as e:
