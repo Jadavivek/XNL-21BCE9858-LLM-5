@@ -1,0 +1,11 @@
+[33m335e7e3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m llm-application
+[33m4925e2a[m Re-added submodule
+[33me145e61[m Ignore virtual environment files
+[33m83b7af3[m Add model selection feature
+[33m25b44a6[m Recovered app.py
+[33m3bea54d[m Add model selection feature
+[33m45ad159[m Initial application setup with CI/CD
+[33m27f4571[m Initial application setup with CI/CD
+[33m6bfd8b1[m Removed Hugging Face token from repo
+[33mabb1689[m Initial application setup with CI/CD
+[33md30ff21[m[33m ([m[1;31morigin/main[m[33m)[m Initial commit
